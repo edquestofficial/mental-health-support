@@ -27,7 +27,7 @@ This project is a full-stack CRM system built with:
 
 
 ### Setup Backend ###
-    - Python 3.13.0
+    - Python 3.10.11
     - `uv` installed (`pip install uv`)
     - vector database
 
