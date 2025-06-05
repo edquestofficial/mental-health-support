@@ -1,0 +1,21 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = "==3.10.12"
+
+dependencies = [
+    "fastapi>=0.110.0",                 # API framework
+    "uvicorn[standard]>=0.29.0",        # ASGI server
+    "pydantic>=2.6.0",                  # Data validation
+    "python-multipart>=0.0.9",          # For handling form-data / file uploads
+    "websockets>=12.0",                 # WebSocket support
+    "pydub>=0.25.1",                    # Audio format conversion
+    "openai-whisper==20231117",         # Compatible Whisper release
+    "numpy<2.0",                        # Ensure compatibility with whisper & torch
+    "torch==2.2.2",                     # Compatible with Python 3.10 and Whisper
+    "sqlalchemy>=2.0.30",              # Optional: if you're using DB
+    "passlib[bcrypt]>=1.7.4",          # Optional: password hashing
+    "ffmpeg-python>=0.2.0"             # Optional: wrapper for ffmpeg
+]
