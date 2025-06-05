@@ -1,102 +1,46 @@
-import React, { useRef, useState } from 'react';
-import AudioPlayer from './AudioPlayer';
-import Transcript from './Transcript';
+import React, { useEffect } from 'react';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
-const Recorder = ({ onSendAudio }) => {
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const recognitionRef = useRef(null);
+const Recorder = () => {
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition();
 
-  const [isRecording, setIsRecording] = useState(false);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const [transcriptLines, setTranscriptLines] = useState([]); // Finalized lines
-  const [interimTranscript, setInterimTranscript] = useState(''); // Live speaking text
+  if (!browserSupportsSpeechRecognition) {
+    return <span>Browser doesn't support speech recognition.</span>;
+  }
 
-  const startRecording = async () => {
-    setIsRecording(true);
-    setTranscriptLines([]);
-    setInterimTranscript('');
+  const startListening = () => {
+    console.log("Start recording");
+    SpeechRecognition.startListening({
+      continuous: false,
+      language: 'en-IN',
+      interimResults: true
+    });
+  };
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorderRef.current = mediaRecorder;
-    audioChunksRef.current = [];
+  const stopListening = () => {
+    console.log("Stop recording");
+    SpeechRecognition.stopListening();  // ✅ Correct method
+  };
 
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      alert("SpeechRecognition is not supported in this browser.");
-      return;
+
+  if (listening) {
+    console.log("Listening...");
+  } else {
+    console.log("Not listening.");
     }
-
-    const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = (event) => {
-      let interim = '';
-      const finalized = [];
-
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalized.push(result[0].transcript.trim());
-        } else {
-          interim += result[0].transcript + ' ';
-        }
-      }
-
-      if (finalized.length > 0) {
-        setTranscriptLines((prev) => [...prev, ...finalized]);
-        setInterimTranscript(''); // Clear interim once finalized
-      }
-
-      if (interim) {
-        setInterimTranscript(interim.trim());
-      }
-    };
-
-    recognition.start();
-
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        audioChunksRef.current.push(event.data);
-      }
-    };
-
-    mediaRecorder.onstop = () => {
-      recognition.stop();
-
-      const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-      const audioUrl = URL.createObjectURL(blob);
-      setAudioUrl(audioUrl);
-
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = () => {
-        const base64Audio = reader.result.split(',')[1];
-        onSendAudio?.(base64Audio);
-      };
-    };
-
-    mediaRecorder.start();
-  };
-
-  const stopRecording = () => {
-    setIsRecording(false);
-    mediaRecorderRef.current?.stop();
-    recognitionRef.current?.stop();
-  };
 
   return (
     <div>
-      <button onClick={isRecording ? stopRecording : startRecording}>
-        {isRecording ? '🛑 Stop Recording' : '🎤 Start Recording'}
-      </button>
-
-      <AudioPlayer audioUrl={audioUrl} />
-      <Transcript transcript={transcriptLines} interim={interimTranscript} />
+      <p>Microphone: {listening ? 'on' : 'off'}</p>
+      <button onClick={startListening}>Start</button>
+      <button onClick={stopListening}>Stop</button>
+      <button onClick={resetTranscript}>Reset</button>
+      <p>{transcript}</p>
     </div>
   );
 };
